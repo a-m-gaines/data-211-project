@@ -1,0 +1,68 @@
+---
+title: "Mood tracker"
+author: "Ava Gaines"
+date: "2026-04-15"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+```
+
+## Load in and display data frame
+```{r}
+MoodTracker <- read_excel("~/DATA 211/MoodTracker.xlsx") %>%
+  select(Observation, DayOfWeek, Outside, Mood)
+
+print(MoodTracker, n=21)
+```
+## Generate summary statistics
+```{r}
+MoodTracker %>%
+  group_by(Outside) %>%
+  summarise(
+    n         = n(),
+    mean      = mean(Mood),
+    median    = median(Mood),
+    sd        = sd(Mood),
+    min       = min(Mood),
+    max       = max(Mood)
+  )
+```
+
+## Hypotheses
+$\mu_o$: average mood on days I went outside
+
+$\mu_i$: average mood on days I stayed inside
+
+$H_0: \mu_o = \mu_i$ vs $H_a: \mu_o > \mu_i$
+
+## Run two-sample T-test
+```{r}
+outside <- MoodTracker$Mood[MoodTracker$Outside == "Yes"]
+inside  <- MoodTracker$Mood[MoodTracker$Outside == "No"]
+
+t.test(outside, inside, alternative = "greater" , var.equal = FALSE)  
+```
+Because p-value is greater than $\alpha = 0.05$, we fail to reject the null hypothesis. In this context, that means we do not have sufficient evidence to conclude that my mood on days I went outside is significantly higher than my mood on days I stayed inside.
+
+## Create boxplot using data
+```{r}
+ggplot(MoodTracker, aes(x = Outside, y = Mood, fill = Outside)) +
+  geom_boxplot() +
+  scale_y_continuous(limits = c(1, 5), breaks = 1:5) +
+  labs(
+    title = "Mood Score by Outside Activity",
+    x = "Went Outside",
+    y = "Mood Score"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
